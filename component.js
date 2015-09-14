@@ -14,6 +14,9 @@ module.exports = function(){
             daoImpl = dao.use(dao.MEMORY);
         } else if(this.params.persistence === 'file') {
             daoImpl = dao.use(dao.FILE);    
+        } else {
+            daoImpl = dao.use(dao.MEMORY);
+            process.emit('product:init.error', { error: { message: 'unrecognized persistence mechanism, defaulted to "memory"' } } );
         }
         dao.register('product');
 
