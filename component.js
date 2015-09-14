@@ -6,9 +6,17 @@ module.exports = function(){
 
     this.init = function(config) {
         var self = this;
-        var daoImpl = dao.use(dao.FILE);
-        dao.register('product');
+        config = config || {};
         this.params = _.defaults(config||{}, defaults);
+
+        var daoImpl;
+        if(this.params.persistence === 'memory') {
+            daoImpl = dao.use(dao.MEMORY);
+        } else if(this.params.persistence === 'file') {
+            daoImpl = dao.use(dao.FILE);    
+        }
+        dao.register('product');
+
         process.on('product:create', function(pin){
             if(!!pin.verbose) console.log('clonq/revo-product: product:create: ', pin);
             var pout = {};
@@ -30,9 +38,9 @@ module.exports = function(){
             }
         });        
         process.on('product:find', function(criteria){
-            daoImpl.product.findOne(criteria)
-            .then(function(product){
-                process.emit(eventOut, product);
+            daoImpl.product.find(criteria)
+            .then(function(result){
+                process.emit('product:find.response', result);
             })
             .catch(function(err){
                 process.emit('product:find.error', err);
@@ -53,9 +61,10 @@ module.exports = function(){
 }
 
 var defaults = module.exports.defaults = {
+    persistence: 'memory',
     models: {
         product: {
-            supportedMethods: ['find']
+            supportedMethods: ['find'],
         }
     }
 }
