@@ -4,15 +4,8 @@ var Product = require('./component');
 var product;
 
 before(function(){
-    const INITIAL_DATA = '{"product":{"e9f48ec6-c056-4404-911a-a15e1f0f8196":{"name":"existing product","SKU":999,"$id":"e9f48ec6-c056-4404-911a-a15e1f0f8196","$created":1434580464913,"$type":"product"}}}';
-    if(require('fs').existsSync('storage.json')) { require('fs').unlinkSync('storage.json'); }
-    require('fs').writeFileSync('storage.json', INITIAL_DATA);
     product = new Product();
-    product.init({persistence: 'file'});
-});
-
-after(function(){
-    if(require('fs').existsSync('storage.json')) { require('fs').unlinkSync('storage.json'); }
+    product.init({persistence: 'file', storage: 'products.json'});
 });
 
 describe('smoke tests', function(){
@@ -56,7 +49,7 @@ describe('smoke tests', function(){
         process.emit('product:create', {name:'test'});
     });
     it('should create valid products', function(done){
-        process.once('product:find.error', function(err){
+        process.once('product:create.error', function(err){
             done(err);
         });
         process.once('product:create.response', function(result){
@@ -67,24 +60,18 @@ describe('smoke tests', function(){
             result.product.name.should.equal('test');
             done();
         });
-        process.emit('product:clear', {});
-        process.emit('product:create', {name:'test', SKU:'1'});
-    });
-    it.skip('should find all products', function(done){
-        process.once('product:find.error', function(err){
+        process.once('product:clear.error', function(err){
             done(err);
         });
-        process.once('product:find.response', function(result){
-            result.should.not.have.property('error');
-            result.length.should.equal(3);
-            done();
-        });
-        process.once('product:clear.response', function(err){
-            process.emit('product:create', {name:'alpha', SKU:'100'});
-            process.emit('product:create', {name:'beta', SKU:'200'});
-            process.emit('product:create', {name:'gamma', SKU:'300'});
-            process.emit('product:find', {});
+        process.once('product:clear.response', function(){
+            process.emit('product:create', {name:'test', SKU:'1'});
         });
         process.emit('product:clear', {});
+    });
+    it('should restore storage', function(done){
+        process.once('product:create.response', function(result){
+            done();
+        });
+        process.emit('product:create', {name:'test'});
     });
 });
