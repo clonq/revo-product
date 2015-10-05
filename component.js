@@ -59,6 +59,8 @@ module.exports = function(){
             }
         });        
         process.on('product:find', function(criteria){
+            criteria = criteria || {};
+            criteria.$type = 'product';
             daoImpl.product.find(criteria)
             .then(function(result){
                 process.emit('product:find.response', result);
